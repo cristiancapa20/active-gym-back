@@ -88,8 +88,6 @@ app.use((err, req, res, next) => {
 // Iniciar servidor
 const startServer = async () => {
   try {
-    // Probar conexión a la base de datos
-    await testConnection();
     
     // Sincronizar modelos con la base de datos (crear tablas si no existen)
     await syncDatabase(false); // false = no forzar recreación de tablas

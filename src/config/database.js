@@ -1,38 +1,48 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-// Configuración de la base de datos
-const sequelize = new Sequelize(
-  process.env.DB_NAME || 'gym_db',
-  process.env.DB_USER || process.env.USER || 'postgres',
-  process.env.DB_PASSWORD || '',
-  {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    dialect: 'postgres',
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
-    }
-  }
-);
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Función para probar la conexión
+let sequelize;
+
+if (process.env.DATABASE_URL) {
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    },
+  });
+} else {
+  sequelize = new Sequelize(
+    process.env.DB_NAME || 'gym_db',
+    process.env.DB_USER || 'postgres',
+    process.env.DB_PASSWORD || '',
+    {
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 5432,
+      dialect: 'postgres',
+      logging: console.log,
+    }
+  );
+}
+
+// Test de conexión
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
-    console.log('✅ Conexión a la base de datos establecida correctamente.');
+    console.log('✅ Conectado a PostgreSQL');
     return true;
   } catch (error) {
-    console.error('❌ Error al conectar con la base de datos:', error.message);
+    console.error('❌ Error DB:', error);
     return false;
   }
 };
 
 module.exports = {
   sequelize,
-  testConnection
+  testConnection,
 };
