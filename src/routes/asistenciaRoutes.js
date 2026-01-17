@@ -7,14 +7,8 @@ const { AsistenciaController } = require('../controller');
  * Base path: /api/asistencia
  */
 
-// Obtener clientes actualmente en el gym (debe ir antes de /:id)
-router.get('/activos', AsistenciaController.getActivos.bind(AsistenciaController));
-
 // Obtener asistencias de un cliente específico (debe ir antes de /:id)
 router.get('/cliente/:clienteId', AsistenciaController.getByCliente.bind(AsistenciaController));
-
-// Registrar salida de un cliente (debe ir antes de /:id)
-router.put('/:id/salida', AsistenciaController.registrarSalida.bind(AsistenciaController));
 
 // Registrar una nueva asistencia (entrada)
 router.post('/', AsistenciaController.create.bind(AsistenciaController));

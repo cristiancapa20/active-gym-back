@@ -12,7 +12,7 @@ class AsistenciaController {
    */
   async create(req, res) {
     try {
-      const { clienteId, qrId, fechaEntrada } = req.body;
+      const { clienteId, qrId, fecha } = req.body;
 
       // Validaciones básicas
       if (!clienteId) {
@@ -34,8 +34,7 @@ class AsistenciaController {
       const nuevaAsistencia = await Asistencia.create({
         clienteId,
         qrId: qrId || null,
-        fechaEntrada: fechaEntrada ? new Date(fechaEntrada) : new Date(),
-        fechaSalida: null
+        fecha: fecha ? new Date(fecha) : new Date()
       });
 
       return res.status(201).json({
@@ -66,7 +65,7 @@ class AsistenciaController {
         startDate.setHours(0, 0, 0, 0);
         const endDate = new Date(fecha);
         endDate.setHours(23, 59, 59, 999);
-        where.fechaEntrada = {
+        where.fecha = {
           [Op.between]: [startDate, endDate]
         };
       }
@@ -77,7 +76,7 @@ class AsistenciaController {
           { model: Cliente, as: 'cliente' },
           { model: QR, as: 'qr', required: false }
         ],
-        order: [['fechaEntrada', 'DESC']]
+        order: [['fecha', 'DESC']]
       });
       
       return res.status(200).json({
@@ -142,7 +141,7 @@ class AsistenciaController {
   async update(req, res) {
     try {
       const { id } = req.params;
-      const { clienteId, qrId, fechaEntrada, fechaSalida } = req.body;
+      const { clienteId, qrId, fecha } = req.body;
 
       if (!id) {
         return res.status(400).json({
@@ -163,8 +162,7 @@ class AsistenciaController {
       await asistencia.update({
         clienteId,
         qrId,
-        fechaEntrada: fechaEntrada ? new Date(fechaEntrada) : asistencia.fechaEntrada,
-        fechaSalida: fechaSalida ? new Date(fechaSalida) : asistencia.fechaSalida
+        fecha: fecha ? new Date(fecha) : asistencia.fecha
       });
       
       return res.status(200).json({
@@ -219,53 +217,6 @@ class AsistenciaController {
   }
 
   /**
-   * Registrar salida de un cliente
-   * PUT /api/asistencia/:id/salida
-   */
-  async registrarSalida(req, res) {
-    try {
-      const { id } = req.params;
-
-      if (!id) {
-        return res.status(400).json({
-          success: false,
-          message: 'ID es requerido'
-        });
-      }
-
-      const asistencia = await Asistencia.findByPk(id);
-      
-      if (!asistencia) {
-        return res.status(404).json({
-          success: false,
-          message: 'Asistencia no encontrada'
-        });
-      }
-      
-      if (asistencia.fechaSalida) {
-        return res.status(400).json({
-          success: false,
-          message: 'La salida ya fue registrada'
-        });
-      }
-      
-      asistencia.fechaSalida = new Date();
-      await asistencia.save();
-      
-      return res.status(200).json({
-        success: true,
-        message: 'Salida registrada exitosamente',
-        data: asistencia
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message || 'Error al registrar salida'
-      });
-    }
-  }
-
-  /**
    * Obtener asistencias de un cliente
    * GET /api/asistencia/cliente/:clienteId
    */
@@ -286,7 +237,7 @@ class AsistenciaController {
         include: [
           { model: QR, as: 'qr', required: false }
         ],
-        order: [['fechaEntrada', 'DESC']],
+        order: [['fecha', 'DESC']],
         limit: parseInt(limit),
         offset: parseInt(offset)
       });
@@ -301,36 +252,6 @@ class AsistenciaController {
       return res.status(500).json({
         success: false,
         message: error.message || 'Error al obtener asistencias del cliente'
-      });
-    }
-  }
-
-  /**
-   * Obtener clientes actualmente en el gym
-   * GET /api/asistencia/activos
-   */
-  async getActivos(req, res) {
-    try {
-      const asistencias = await Asistencia.findAll({
-        where: {
-          fechaSalida: null
-        },
-        include: [
-          { model: Cliente, as: 'cliente' },
-          { model: QR, as: 'qr', required: false }
-        ],
-        order: [['fechaEntrada', 'DESC']]
-      });
-      
-      return res.status(200).json({
-        success: true,
-        message: 'Clientes activos obtenidos exitosamente',
-        data: asistencias
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message || 'Error al obtener clientes activos'
       });
     }
   }

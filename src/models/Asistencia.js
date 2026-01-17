@@ -27,14 +27,10 @@ const Asistencia = sequelize.define('Asistencia', {
       key: 'id'
     }
   },
-  fechaEntrada: {
+  fecha: {
     type: DataTypes.DATE,
     allowNull: false,
     defaultValue: DataTypes.NOW
-  },
-  fechaSalida: {
-    type: DataTypes.DATE,
-    allowNull: true
   }
 }, {
   tableName: 'asistencias',

@@ -11,6 +11,7 @@
     "update-db-force": "node src/scripts/updateDatabase.js --force",
     "verificar-vencidos": "node src/scripts/verificarVencidos.js",
     "test-notificaciones": "node src/scripts/testNotificaciones.js",
+    "registrar-asistencia": "node src/scripts/registrarAsistencia.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
