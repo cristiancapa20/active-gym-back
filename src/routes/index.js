@@ -1,6 +1,7 @@
 const express = require('express');
 const adminRoutes = require('./adminRoutes');
 const clienteRoutes = require('./clienteRoutes');
+const entrenadorRoutes = require('./entrenadorRoutes');
 const membresiaRoutes = require('./membresiaRoutes');
 const qrRoutes = require('./qrRoutes');
 const asistenciaRoutes = require('./asistenciaRoutes');
@@ -22,6 +23,9 @@ router.use('/admin', adminRoutes);
 
 // Rutas de Cliente
 router.use('/cliente', clienteRoutes);
+
+// Rutas de Entrenador
+router.use('/entrenador', entrenadorRoutes);
 
 // Rutas de Membresía
 router.use('/membresia', membresiaRoutes);

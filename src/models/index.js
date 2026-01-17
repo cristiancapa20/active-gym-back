@@ -1,6 +1,7 @@
 const { sequelize } = require('../config/database');
 const Admin = require('./Admin');
 const Cliente = require('./Cliente');
+const Entrenador = require('./Entrenador');
 const Membresia = require('./Membresia');
 const QR = require('./QR');
 const Asistencia = require('./Asistencia');
@@ -40,6 +41,7 @@ module.exports = {
   sequelize,
   Admin,
   Cliente,
+  Entrenador,
   Membresia,
   QR,
   Asistencia,

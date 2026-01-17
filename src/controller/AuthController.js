@@ -1,14 +1,14 @@
-const { Admin, Cliente } = require('../models');
+const { Admin, Cliente, Entrenador } = require('../models');
 const { hashPassword, comparePassword } = require('../utils/password');
 
 /**
  * Controller para Autenticación
- * Maneja login unificado para Admin y Cliente
+ * Maneja login unificado para Admin, Cliente y Entrenador
  */
 class AuthController {
   /**
-   * Login unificado (Admin y Cliente)
-   * Ambos usan email y password
+   * Login unificado (Admin, Cliente y Entrenador)
+   * Todos usan email y password
    * POST /api/auth/login
    */
   async login(req, res) {
@@ -58,7 +58,54 @@ class AuthController {
         }
       }
 
-      // Si no es admin, intentar como Cliente
+      // Si no es admin, intentar como Entrenador
+      if (!user) {
+        const entrenador = await Entrenador.findOne({
+          where: { email }
+        });
+
+        if (entrenador) {
+          console.log(`👤 Entrenador encontrado: ${entrenador.nombre} ${entrenador.apellido}`);
+          // Validar password del entrenador
+          if (entrenador.password) {
+            const isPasswordValid = await comparePassword(password, entrenador.password);
+            console.log(`🔑 Validación de contraseña entrenador: ${isPasswordValid}`);
+            if (!isPasswordValid) {
+              console.log(`❌ Contraseña incorrecta para entrenador: ${entrenador.email}`);
+              return res.status(401).json({
+                success: false,
+                message: 'Credenciales inválidas'
+              });
+            }
+          } else {
+            console.log(`⚠️ Entrenador sin contraseña: ${entrenador.email}`);
+            return res.status(401).json({
+              success: false,
+              message: 'Credenciales inválidas'
+            });
+          }
+
+          if (!entrenador.activo) {
+            console.log(`❌ Entrenador inactivo: ${entrenador.email}`);
+            return res.status(403).json({
+              success: false,
+              message: 'Cuenta inactiva'
+            });
+          }
+          user = {
+            id: entrenador.id,
+            nombre: entrenador.nombre,
+            apellido: entrenador.apellido,
+            email: entrenador.email,
+            cedula: entrenador.cedula,
+            especialidad: entrenador.especialidad,
+            tipo: 'entrenador'
+          };
+          console.log(`✅ Login exitoso como entrenador: ${entrenador.nombre} ${entrenador.apellido}`);
+        }
+      }
+
+      // Si no es admin ni entrenador, intentar como Cliente
       if (!user) {
         const cliente = await Cliente.findOne({
           where: { email }
