@@ -1,5 +1,6 @@
 const { Cliente, Membresia, QR } = require('../models');
 const crypto = require('crypto');
+const { hashPassword } = require('../utils/password');
 
 /**
  * Función para generar un código QR único
@@ -53,13 +54,16 @@ class ClienteController {
         });
       }
 
+      // Hashear password si se proporciona
+      const hashedPassword = password ? await hashPassword(password) : null;
+
       // Crear el cliente
       const nuevoCliente = await Cliente.create({
         nombre,
         apellido,
         cedula: cedula || null,
         email: email || null,
-        password: password || null, // TODO: Hashear password antes de guardar
+        password: hashedPassword,
         peso: peso || null,
         telefono: telefono || null,
         fechaInicio: fechaInicio ? new Date(fechaInicio) : null,
@@ -265,7 +269,7 @@ class ClienteController {
 
       // Solo actualizar password si se proporciona
       if (password) {
-        updateData.password = password; // TODO: Hashear antes de guardar
+        updateData.password = await hashPassword(password);
       }
 
       await cliente.update(updateData);

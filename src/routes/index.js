@@ -5,6 +5,7 @@ const membresiaRoutes = require('./membresiaRoutes');
 const qrRoutes = require('./qrRoutes');
 const asistenciaRoutes = require('./asistenciaRoutes');
 const authRoutes = require('./authRoutes');
+const notificacionRoutes = require('./notificacionRoutes');
 
 const router = express.Router();
 
@@ -30,5 +31,8 @@ router.use('/qr', qrRoutes);
 
 // Rutas de Asistencia
 router.use('/asistencia', asistenciaRoutes);
+
+// Rutas de Notificaciones
+router.use('/notificacion', notificacionRoutes);
 
 module.exports = router;

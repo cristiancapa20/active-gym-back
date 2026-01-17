@@ -2,6 +2,7 @@ require('dotenv').config();
 const { sequelize, testConnection } = require('../config/database');
 const { Admin } = require('../models');
 const { syncDatabase } = require('../config/syncDatabase');
+const { hashPassword } = require('../utils/password');
 
 /**
  * Script para crear un administrador inicial
@@ -34,10 +35,11 @@ async function createAdmin() {
 
     // Crear admin por defecto
     console.log('👨‍💼 Creando administrador inicial...');
+    const hashedPassword = await hashPassword('admin123');
     const admin = await Admin.create({
       nombre: 'Administrador',
       email: 'admin@gym.com',
-      password: 'admin123', // TODO: Hashear con bcrypt en producción
+      password: hashedPassword,
       rol: 'admin',
       activo: true
     });

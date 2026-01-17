@@ -1,4 +1,5 @@
 const { Admin, Cliente } = require('../models');
+const { hashPassword, comparePassword } = require('../utils/password');
 
 /**
  * Controller para Autenticación
@@ -22,6 +23,8 @@ class AuthController {
         });
       }
 
+      console.log(`🔐 Intento de login para: ${email}`);
+
       let user = null;
 
       // Primero intentar buscar como Admin
@@ -30,9 +33,13 @@ class AuthController {
       });
 
       if (admin) {
-        // TODO: Comparar password hasheado (usar bcrypt)
-        if (admin.password === password) {
+        console.log(`👤 Admin encontrado: ${admin.nombre}`);
+        // Comparar password hasheado
+        const isPasswordValid = await comparePassword(password, admin.password);
+        console.log(`🔑 Validación de contraseña admin: ${isPasswordValid}`);
+        if (isPasswordValid) {
           if (!admin.activo) {
+            console.log(`❌ Admin inactivo: ${admin.email}`);
             return res.status(403).json({
               success: false,
               message: 'Cuenta inactiva'
@@ -45,6 +52,9 @@ class AuthController {
             rol: admin.rol,
             tipo: 'admin'
           };
+          console.log(`✅ Login exitoso como admin: ${admin.nombre}`);
+        } else {
+          console.log(`❌ Contraseña incorrecta para admin: ${admin.email}`);
         }
       }
 
@@ -55,9 +65,20 @@ class AuthController {
         });
 
         if (cliente) {
+          console.log(`👤 Cliente encontrado: ${cliente.nombre} ${cliente.apellido}`);
           // Validar password del cliente
-          // TODO: Comparar password hasheado (usar bcrypt)
-          if (cliente.password && cliente.password !== password) {
+          if (cliente.password) {
+            const isPasswordValid = await comparePassword(password, cliente.password);
+            console.log(`🔑 Validación de contraseña cliente: ${isPasswordValid}`);
+            if (!isPasswordValid) {
+              console.log(`❌ Contraseña incorrecta para cliente: ${cliente.email}`);
+              return res.status(401).json({
+                success: false,
+                message: 'Credenciales inválidas'
+              });
+            }
+          } else {
+            console.log(`⚠️ Cliente sin contraseña: ${cliente.email}`);
             return res.status(401).json({
               success: false,
               message: 'Credenciales inválidas'
@@ -65,6 +86,7 @@ class AuthController {
           }
 
           if (!cliente.activo) {
+            console.log(`❌ Cliente inactivo: ${cliente.email}`);
             return res.status(403).json({
               success: false,
               message: 'Cuenta inactiva'
@@ -78,6 +100,9 @@ class AuthController {
             cedula: cliente.cedula,
             tipo: 'cliente'
           };
+          console.log(`✅ Login exitoso como cliente: ${cliente.nombre} ${cliente.apellido}`);
+        } else {
+          console.log(`❌ Usuario no encontrado: ${email}`);
         }
       }
 
@@ -132,11 +157,12 @@ class AuthController {
         });
       }
 
-      // TODO: Hashear password antes de guardar
+      // Hashear password antes de guardar
+      const hashedPassword = await hashPassword(password);
       const nuevoAdmin = await Admin.create({
         nombre,
         email,
-        password, // TODO: Hashear con bcrypt
+        password: hashedPassword,
         rol: rol || 'admin',
         activo: true
       });

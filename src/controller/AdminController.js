@@ -1,4 +1,5 @@
 const { Admin } = require('../models');
+const { hashPassword } = require('../utils/password');
 
 /**
  * Controller para Admin/Usuario del Sistema
@@ -21,10 +22,13 @@ class AdminController {
         });
       }
 
+      // Hashear password antes de guardar
+      const hashedPassword = await hashPassword(password);
+      
       const admin = await Admin.create({
         nombre,
         email,
-        password, // TODO: Hashear la contraseña antes de guardar
+        password: hashedPassword,
         rol: rol || 'admin',
         activo: activo !== undefined ? activo : true
       });
@@ -132,7 +136,7 @@ class AdminController {
 
       const updateData = { nombre, email, rol, activo };
       if (password) {
-        updateData.password = password; // TODO: Hashear antes de guardar
+        updateData.password = await hashPassword(password);
       }
 
       await admin.update(updateData);

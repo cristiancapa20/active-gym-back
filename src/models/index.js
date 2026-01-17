@@ -4,6 +4,7 @@ const Cliente = require('./Cliente');
 const Membresia = require('./Membresia');
 const QR = require('./QR');
 const Asistencia = require('./Asistencia');
+const Notificacion = require('./Notificacion');
 
 // Definir relaciones
 
@@ -27,11 +28,20 @@ Asistencia.belongsTo(Cliente, { foreignKey: 'clienteId', as: 'cliente' });
 QR.hasMany(Asistencia, { foreignKey: 'qrId', as: 'asistencias' });
 Asistencia.belongsTo(QR, { foreignKey: 'qrId', as: 'qr' });
 
+// Cliente -> Notificación (1:N - un cliente puede tener múltiples notificaciones)
+Cliente.hasMany(Notificacion, { foreignKey: 'clienteId', as: 'notificaciones' });
+Notificacion.belongsTo(Cliente, { foreignKey: 'clienteId', as: 'cliente' });
+
+// Membresía -> Notificación (1:N - una membresía puede tener múltiples notificaciones)
+Membresia.hasMany(Notificacion, { foreignKey: 'membresiaId', as: 'notificaciones' });
+Notificacion.belongsTo(Membresia, { foreignKey: 'membresiaId', as: 'membresia' });
+
 module.exports = {
   sequelize,
   Admin,
   Cliente,
   Membresia,
   QR,
-  Asistencia
+  Asistencia,
+  Notificacion
 };
