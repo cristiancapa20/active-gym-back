@@ -30,12 +30,11 @@ class ClienteController {
         password, 
         peso, 
         telefono, 
-        fechaInicio, 
-        fechaFin, 
-        tipoPago, 
         activo,
+        planId,
         tipoMembresia,
-        precioMembresia
+        precioMembresia,
+        tipoPago
       } = req.body;
 
       // Validaciones básicas
@@ -66,20 +65,16 @@ class ClienteController {
         password: hashedPassword,
         peso: peso || null,
         telefono: telefono || null,
-        fechaInicio: fechaInicio ? new Date(fechaInicio) : null,
-        fechaFin: fechaFin ? new Date(fechaFin) : null,
-        tipoPago: tipoPago || null,
         activo: activo !== undefined ? activo : true
       });
 
-      // Crear membresía automáticamente (siempre se crea una membresía)
-      const fechaInicioDate = fechaInicio ? new Date(fechaInicio) : new Date();
-      
-      // Calcular fecha fin basada en el tipo de membresía si no se proporciona
-      let fechaFinCalculada = fechaFin ? new Date(fechaFin) : null;
-      
-      if (!fechaFinCalculada && tipoMembresia) {
-        fechaFinCalculada = new Date(fechaInicioDate);
+      // Crear membresía automáticamente si se proporciona información de membresía
+      let nuevaMembresia = null;
+      if (tipoMembresia && precioMembresia !== undefined) {
+        const fechaInicioDate = new Date();
+        
+        // Calcular fecha fin basada en el tipo de membresía
+        let fechaFinCalculada = new Date(fechaInicioDate);
         
         switch (tipoMembresia) {
           case 'mensual':
@@ -95,16 +90,18 @@ class ClienteController {
             fechaFinCalculada.setFullYear(fechaFinCalculada.getFullYear() + 1);
             break;
         }
-      }
 
-      const nuevaMembresia = await Membresia.create({
-        clienteId: nuevoCliente.id,
-        tipo: tipoMembresia || 'mensual',
-        fechaInicio: fechaInicioDate,
-        fechaFin: fechaFinCalculada,
-        precio: precioMembresia || 0,
-        activa: true
-      });
+        nuevaMembresia = await Membresia.create({
+          clienteId: nuevoCliente.id,
+          planId: planId || null,
+          tipo: tipoMembresia,
+          fechaInicio: fechaInicioDate,
+          fechaFin: fechaFinCalculada,
+          precio: precioMembresia || 0,
+          estado: 'activa',
+          tipoPago: tipoPago || null
+        });
+      }
 
       // Crear QR único automáticamente
       // Generar código único
@@ -232,9 +229,6 @@ class ClienteController {
         password, 
         peso, 
         telefono, 
-        fechaInicio, 
-        fechaFin, 
-        tipoPago, 
         activo 
       } = req.body;
 
@@ -261,9 +255,6 @@ class ClienteController {
         email: email !== undefined ? email : cliente.email,
         peso: peso !== undefined ? peso : cliente.peso,
         telefono: telefono !== undefined ? telefono : cliente.telefono,
-        fechaInicio: fechaInicio ? new Date(fechaInicio) : cliente.fechaInicio,
-        fechaFin: fechaFin ? new Date(fechaFin) : cliente.fechaFin,
-        tipoPago: tipoPago !== undefined ? tipoPago : cliente.tipoPago,
         activo: activo !== undefined ? activo : cliente.activo
       };
 

@@ -1,5 +1,6 @@
 const { sequelize, testConnection } = require('./database');
-const { Admin, Cliente, Membresia, QR, Asistencia } = require('../models');
+// Importar todos los modelos para que se sincronicen
+const { Gym, Admin, Cliente, Entrenador, PlanMembresia, Membresia, QR, Asistencia, Notificacion, Configuracion } = require('../models');
 
 /**
  * Sincronizar modelos con la base de datos

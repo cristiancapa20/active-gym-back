@@ -25,4 +25,7 @@ router.put('/:id', MembresiaController.update.bind(MembresiaController));
 // Eliminar una membresía
 router.delete('/:id', MembresiaController.delete.bind(MembresiaController));
 
+// Renovar membresía (crear nueva y marcar anteriores como vencidas)
+router.post('/renovar', MembresiaController.renovar.bind(MembresiaController));
+
 module.exports = router;

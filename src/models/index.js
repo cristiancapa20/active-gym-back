@@ -1,13 +1,36 @@
 const { sequelize } = require('../config/database');
+const Gym = require('./Gym');
 const Admin = require('./Admin');
 const Cliente = require('./Cliente');
 const Entrenador = require('./Entrenador');
+const PlanMembresia = require('./PlanMembresia');
 const Membresia = require('./Membresia');
 const QR = require('./QR');
 const Asistencia = require('./Asistencia');
 const Notificacion = require('./Notificacion');
+const Configuracion = require('./Configuracion');
 
 // Definir relaciones
+
+// Gym -> Admin (1:N - un gym puede tener múltiples admins)
+Gym.hasMany(Admin, { foreignKey: 'gymId', as: 'admins' });
+Admin.belongsTo(Gym, { foreignKey: 'gymId', as: 'gym' });
+
+// Gym -> Cliente (1:N - un gym puede tener múltiples clientes)
+Gym.hasMany(Cliente, { foreignKey: 'gymId', as: 'clientes' });
+Cliente.belongsTo(Gym, { foreignKey: 'gymId', as: 'gym' });
+
+// Gym -> Entrenador (1:N - un gym puede tener múltiples entrenadores)
+Gym.hasMany(Entrenador, { foreignKey: 'gymId', as: 'entrenadores' });
+Entrenador.belongsTo(Gym, { foreignKey: 'gymId', as: 'gym' });
+
+// Gym -> Configuracion (1:N - un gym puede tener múltiples configuraciones)
+Gym.hasMany(Configuracion, { foreignKey: 'gymId', as: 'configuraciones' });
+Configuracion.belongsTo(Gym, { foreignKey: 'gymId', as: 'gym' });
+
+// PlanMembresia -> Membresía (1:N - un plan puede tener múltiples membresías)
+PlanMembresia.hasMany(Membresia, { foreignKey: 'planId', as: 'membresias' });
+Membresia.belongsTo(PlanMembresia, { foreignKey: 'planId', as: 'plan' });
 
 // Cliente -> Membresía (1:N - un cliente puede tener múltiples membresías)
 Cliente.hasMany(Membresia, { foreignKey: 'clienteId', as: 'membresias' });
@@ -39,11 +62,14 @@ Notificacion.belongsTo(Membresia, { foreignKey: 'membresiaId', as: 'membresia' }
 
 module.exports = {
   sequelize,
+  Gym,
   Admin,
   Cliente,
   Entrenador,
+  PlanMembresia,
   Membresia,
   QR,
   Asistencia,
-  Notificacion
+  Notificacion,
+  Configuracion
 };

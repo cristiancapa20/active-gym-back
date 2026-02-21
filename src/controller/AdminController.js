@@ -24,7 +24,7 @@ class AdminController {
 
       // Hashear password antes de guardar
       const hashedPassword = await hashPassword(password);
-      
+
       const admin = await Admin.create({
         nombre,
         email,

@@ -46,6 +46,15 @@ const Entrenador = sequelize.define('Entrenador', {
     allowNull: true,
     comment: 'Especialidad del entrenador (ej: fuerza, cardio, yoga, etc.)'
   },
+  gymId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: 'gyms',
+      key: 'id'
+    },
+    comment: 'ID del gimnasio al que pertenece el entrenador'
+  },
   activo: {
     type: DataTypes.BOOLEAN,
     defaultValue: true

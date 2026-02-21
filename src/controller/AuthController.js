@@ -50,7 +50,8 @@ class AuthController {
             nombre: admin.nombre,
             email: admin.email,
             rol: admin.rol,
-            tipo: 'admin'
+            tipo: 'admin',
+            gymId: admin.gymId
           };
           console.log(`✅ Login exitoso como admin: ${admin.nombre}`);
         } else {

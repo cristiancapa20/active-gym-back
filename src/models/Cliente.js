@@ -46,20 +46,14 @@ const Cliente = sequelize.define('Cliente', {
     type: DataTypes.STRING,
     allowNull: true
   },
-  fechaInicio: {
-    type: DataTypes.DATE,
-    allowNull: true,
-    comment: 'Fecha de inicio de la membresía actual'
-  },
-  fechaFin: {
-    type: DataTypes.DATE,
-    allowNull: true,
-    comment: 'Fecha de fin de la membresía actual'
-  },
-  tipoPago: {
-    type: DataTypes.ENUM('efectivo', 'tarjeta', 'transferencia', 'otro'),
-    allowNull: true,
-    comment: 'Tipo de pago preferido'
+  gymId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: 'gyms',
+      key: 'id'
+    },
+    comment: 'ID del gimnasio al que pertenece el cliente'
   },
   activo: {
     type: DataTypes.BOOLEAN,

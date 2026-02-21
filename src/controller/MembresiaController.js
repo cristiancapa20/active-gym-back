@@ -1,4 +1,5 @@
-const { Membresia, Cliente } = require('../models');
+const { Membresia, Cliente, PlanMembresia } = require('../models');
+const { Op } = require('sequelize');
 
 /**
  * Controller para Membresía
@@ -11,13 +12,13 @@ class MembresiaController {
    */
   async create(req, res) {
     try {
-      const { clienteId, tipo, fechaInicio, fechaFin, activa, precio } = req.body;
+      const { clienteId, planId, tipo, fechaInicio, fechaFin, estado, tipoPago, precio } = req.body;
 
       // Validaciones básicas
-      if (!clienteId || !tipo || precio === undefined) {
+      if (!clienteId || !tipo || precio === undefined || !fechaFin) {
         return res.status(400).json({
           success: false,
-          message: 'ClienteId, tipo y precio son requeridos'
+          message: 'ClienteId, tipo, precio y fechaFin son requeridos'
         });
       }
 
@@ -30,12 +31,36 @@ class MembresiaController {
         });
       }
 
+      // Si se proporciona planId, verificar que existe
+      if (planId) {
+        const plan = await PlanMembresia.findByPk(planId);
+        if (!plan) {
+          return res.status(404).json({
+            success: false,
+            message: 'Plan de membresía no encontrado'
+          });
+        }
+      }
+
+      // Marcar membresías activas anteriores como vencidas
+      await Membresia.update(
+        { estado: 'vencida' },
+        {
+          where: {
+            clienteId,
+            estado: 'activa'
+          }
+        }
+      );
+
       const membresia = await Membresia.create({
         clienteId,
+        planId: planId || null,
         tipo,
         fechaInicio: fechaInicio ? new Date(fechaInicio) : new Date(),
-        fechaFin: fechaFin ? new Date(fechaFin) : null,
-        activa: activa !== undefined ? activa : true,
+        fechaFin: new Date(fechaFin),
+        estado: estado || 'activa',
+        tipoPago: tipoPago || null,
         precio
       });
 
@@ -67,7 +92,10 @@ class MembresiaController {
 
       const membresias = await Membresia.findAll({
         where,
-        include: [{ model: Cliente, as: 'cliente' }],
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: PlanMembresia, as: 'plan' }
+        ],
         order: [['createdAt', 'DESC']]
       });
       
@@ -100,7 +128,10 @@ class MembresiaController {
       }
 
       const membresia = await Membresia.findByPk(id, {
-        include: [{ model: Cliente, as: 'cliente' }]
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: PlanMembresia, as: 'plan' }
+        ]
       });
 
       if (!membresia) {
@@ -130,7 +161,7 @@ class MembresiaController {
   async update(req, res) {
     try {
       const { id } = req.params;
-      const { clienteId, tipo, fechaInicio, fechaFin, activa, precio } = req.body;
+      const { planId, tipo, fechaInicio, fechaFin, estado, tipoPago, precio } = req.body;
 
       if (!id) {
         return res.status(400).json({
@@ -148,13 +179,25 @@ class MembresiaController {
         });
       }
 
+      // Si se proporciona planId, verificar que existe
+      if (planId) {
+        const plan = await PlanMembresia.findByPk(planId);
+        if (!plan) {
+          return res.status(404).json({
+            success: false,
+            message: 'Plan de membresía no encontrado'
+          });
+        }
+      }
+
       await membresia.update({
-        clienteId,
-        tipo,
+        planId: planId !== undefined ? planId : membresia.planId,
+        tipo: tipo !== undefined ? tipo : membresia.tipo,
         fechaInicio: fechaInicio ? new Date(fechaInicio) : membresia.fechaInicio,
         fechaFin: fechaFin ? new Date(fechaFin) : membresia.fechaFin,
-        activa,
-        precio
+        estado: estado !== undefined ? estado : membresia.estado,
+        tipoPago: tipoPago !== undefined ? tipoPago : membresia.tipoPago,
+        precio: precio !== undefined ? precio : membresia.precio
       });
       
       return res.status(200).json({
@@ -226,13 +269,13 @@ class MembresiaController {
       const membresias = await Membresia.findAll({
         where: {
           clienteId,
-          activa: true,
-          [require('sequelize').Op.or]: [
-            { fechaFin: null },
-            { fechaFin: { [require('sequelize').Op.gte]: new Date() } }
-          ]
+          estado: 'activa',
+          fechaFin: { [Op.gte]: new Date() }
         },
-        include: [{ model: Cliente, as: 'cliente' }],
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: PlanMembresia, as: 'plan' }
+        ],
         order: [['fechaInicio', 'DESC']]
       });
       
@@ -245,6 +288,78 @@ class MembresiaController {
       return res.status(500).json({
         success: false,
         message: error.message || 'Error al obtener membresías activas'
+      });
+    }
+  }
+
+  /**
+   * Renovar membresía (crear nueva y marcar anteriores como vencidas)
+   * POST /api/membresia/renovar
+   */
+  async renovar(req, res) {
+    try {
+      const { clienteId, planId, tipo, fechaInicio, fechaFin, tipoPago, precio } = req.body;
+
+      // Validaciones básicas
+      if (!clienteId || !tipo || precio === undefined || !fechaFin) {
+        return res.status(400).json({
+          success: false,
+          message: 'ClienteId, tipo, precio y fechaFin son requeridos'
+        });
+      }
+
+      // Verificar que el cliente existe
+      const cliente = await Cliente.findByPk(clienteId);
+      if (!cliente) {
+        return res.status(404).json({
+          success: false,
+          message: 'Cliente no encontrado'
+        });
+      }
+
+      // Si se proporciona planId, verificar que existe
+      if (planId) {
+        const plan = await PlanMembresia.findByPk(planId);
+        if (!plan) {
+          return res.status(404).json({
+            success: false,
+            message: 'Plan de membresía no encontrado'
+          });
+        }
+      }
+
+      // Marcar todas las membresías activas del cliente como vencidas
+      await Membresia.update(
+        { estado: 'vencida' },
+        {
+          where: {
+            clienteId,
+            estado: 'activa'
+          }
+        }
+      );
+
+      // Crear nueva membresía
+      const nuevaMembresia = await Membresia.create({
+        clienteId,
+        planId: planId || null,
+        tipo,
+        fechaInicio: fechaInicio ? new Date(fechaInicio) : new Date(),
+        fechaFin: new Date(fechaFin),
+        estado: 'activa',
+        tipoPago: tipoPago || null,
+        precio
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Membresía renovada exitosamente',
+        data: nuevaMembresia
+      });
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Error al renovar membresía'
       });
     }
   }

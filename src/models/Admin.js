@@ -31,6 +31,15 @@ const Admin = sequelize.define('Admin', {
     type: DataTypes.ENUM('admin', 'super_admin'),
     defaultValue: 'admin'
   },
+  gymId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'gyms',
+      key: 'id'
+    },
+    comment: 'ID del gimnasio al que pertenece (null para super_admin)'
+  },
   activo: {
     type: DataTypes.BOOLEAN,
     defaultValue: true

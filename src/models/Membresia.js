@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 
 /**
  * Modelo Membresía
- * Representa la mensualidad activa/inactiva del cliente
+ * Representa cada período de membresía del cliente (historial completo)
  */
 const Membresia = sequelize.define('Membresia', {
   id: {
@@ -19,9 +19,19 @@ const Membresia = sequelize.define('Membresia', {
       key: 'id'
     }
   },
+  planId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'planes_membresia',
+      key: 'id'
+    },
+    comment: 'Referencia al plan de membresía utilizado'
+  },
   tipo: {
     type: DataTypes.ENUM('mensual', 'trimestral', 'semestral', 'anual'),
-    allowNull: false
+    allowNull: false,
+    comment: 'Tipo de membresía (mantenido para compatibilidad)'
   },
   fechaInicio: {
     type: DataTypes.DATE,
@@ -30,16 +40,25 @@ const Membresia = sequelize.define('Membresia', {
   },
   fechaFin: {
     type: DataTypes.DATE,
-    allowNull: true
+    allowNull: false,
+    comment: 'Fecha de fin de la membresía'
   },
-  activa: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true
+  estado: {
+    type: DataTypes.ENUM('activa', 'vencida', 'cancelada'),
+    allowNull: false,
+    defaultValue: 'activa',
+    comment: 'Estado de la membresía'
+  },
+  tipoPago: {
+    type: DataTypes.ENUM('efectivo', 'tarjeta', 'transferencia', 'otro'),
+    allowNull: true,
+    comment: 'Tipo de pago utilizado para esta membresía'
   },
   precio: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    comment: 'Precio pagado por esta membresía (puede diferir del plan si hubo descuento)'
   }
 }, {
   tableName: 'membresias',

@@ -11,12 +11,12 @@ async function desactivarVencidos(io = null) {
     const ahora = new Date();
     console.log(`[${ahora.toISOString()}] Iniciando verificación de membresías y QR vencidos...`);
 
-    // 1. Desactivar membresías vencidas
+    // 1. Marcar membresías vencidas como 'vencida'
     const membresiasVencidas = await Membresia.update(
-      { activa: false },
+      { estado: 'vencida' },
       {
         where: {
-          activa: true,
+          estado: 'activa',
           fechaFin: {
             [Sequelize.Op.lt]: ahora // fechaFin < ahora
           }
@@ -24,7 +24,7 @@ async function desactivarVencidos(io = null) {
       }
     );
 
-    console.log(`Membresías desactivadas: ${membresiasVencidas[0]}`);
+    console.log(`Membresías vencidas: ${membresiasVencidas[0]}`);
 
     // 2. Desactivar QR vencidos (por fecha de expiración)
     const qrsVencidosPorFecha = await QR.update(
@@ -41,10 +41,14 @@ async function desactivarVencidos(io = null) {
 
     console.log(`QR desactivados por fecha de expiración: ${qrsVencidosPorFecha[0]}`);
 
-    // 3. Desactivar QR cuyas membresías están inactivas
-    // Primero obtener todas las membresías inactivas
+    // 3. Desactivar QR cuyas membresías están vencidas o canceladas
+    // Primero obtener todas las membresías vencidas o canceladas
     const membresiasInactivas = await Membresia.findAll({
-      where: { activa: false },
+      where: { 
+        estado: {
+          [Sequelize.Op.in]: ['vencida', 'cancelada']
+        }
+      },
       attributes: ['id']
     });
 
@@ -73,7 +77,7 @@ async function desactivarVencidos(io = null) {
     // Obtener membresías que vencen en 5 días
     const membresiasPorVencer = await Membresia.findAll({
       where: {
-        activa: true,
+        estado: 'activa',
         fechaFin: {
           [Sequelize.Op.between]: [ahora, cincoDiasDespues]
         }
